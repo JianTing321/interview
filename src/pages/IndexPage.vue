@@ -39,7 +39,7 @@
                 :model-value="props.row[col.name]"
                 buttons
                 v-slot="scope"
-                @save="setValue"
+                @save="setValue(props.row)"
               >
                 <q-input
                   v-model="scope.value"
@@ -146,14 +146,15 @@ const getData = async () => {
   try {
     const response = await axios.get(`${baseURL}api/CRUDTest/a`);
     blockData.value = response.data;
-    console.log(response.data);
+    // console.log(response.data);
   } catch (error) {
     console.error('Error fetching data:', error);
   }
 };
-async function setValue() {
+async function setValue(value) {
   try {
-    await axios.patch(`${baseURL}api/CRUDTest`, blockData.value);
+    console.log(blockData.value);
+    await axios.patch(`${baseURL}api/CRUDTest`, value);
   } catch (error) {
   } finally {
     getData();
@@ -162,7 +163,7 @@ async function setValue() {
 
 getData();
 async function handleClickOption(btn, data, index) {
-  console.log(btn, data, index);
+  // console.log(btn, data, index);
   if (index) {
     try {
       await axios.delete(`${baseURL}api/CRUDTest/${data.id}`);
