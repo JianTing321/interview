@@ -4,7 +4,7 @@
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
         <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
+        <q-btn color="primary" class="q-mt-md" @click="addList">新增</q-btn>
       </div>
 
       <q-table
@@ -35,11 +35,28 @@
               :props="props"
               style="min-width: 120px"
             >
-              <div>{{ col.value }}</div>
+              <q-popup-edit
+                :model-value="props.row[col.name]"
+                buttons
+                v-slot="scope"
+                @save="setValue"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  @keyup.enter="scope.set"
+                  @update:modelValue="
+                    (newVal) => updateRowValue(newVal, props.row, col.name)
+                  "
+                />
+              </q-popup-edit>
+              <div>{{ props.row[col.name] }}</div>
             </q-td>
+
             <q-td class="text-right" auto-width v-if="tableButtons.length > 0">
               <q-btn
-                @click="handleClickOption(btn, props.row)"
+                @click="handleClickOption(btn, props.row, index)"
                 v-for="(btn, index) in tableButtons"
                 :key="index"
                 size="sm"
@@ -80,7 +97,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { QTableProps } from 'quasar';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 interface btnType {
   label: string;
   icon: string;
@@ -123,8 +140,51 @@ const tempData = ref({
   name: '',
   age: '',
 });
-function handleClickOption(btn, data) {
-  // ...
+const baseURL = process.env.API;
+
+const getData = async () => {
+  try {
+    const response = await axios.get(`${baseURL}api/CRUDTest/a`);
+    blockData.value = response.data;
+    console.log(response.data);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+};
+async function setValue() {
+  try {
+    await axios.patch(`${baseURL}api/CRUDTest`, blockData.value);
+  } catch (error) {
+  } finally {
+    getData();
+  }
+}
+
+getData();
+async function handleClickOption(btn, data, index) {
+  console.log(btn, data, index);
+  if (index) {
+    try {
+      await axios.delete(`${baseURL}api/CRUDTest/${data.id}`);
+    } catch (error) {
+    } finally {
+      getData();
+    }
+  }
+}
+
+async function updateRowValue(newVal, row, colName) {
+  row[colName] = newVal;
+}
+
+async function addList() {
+  try {
+    await axios.post(`${baseURL}api/CRUDTest`, tempData.value);
+  } catch (error) {
+    console.error('Error posting data:', error);
+  } finally {
+    getData();
+  }
 }
 </script>
 
